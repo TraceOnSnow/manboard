@@ -59,19 +59,19 @@
 **Interfaces:**
 - Produces: `core/` 和 `dashboard/` 目录结构，后续所有任务基于此路径
 
-- [ ] **Step 1: 打回滚 tag**
+- [x] **Step 1: 打回滚 tag**
 ```bash
 git tag pre-foundation
 git tag  # 确认 pre-foundation 出现
 ```
 
-- [ ] **Step 2: 移动目录**
+- [x] **Step 2: 移动目录**
 ```bash
 cp -r life-dashboard/backend core
 cp -r life-dashboard/frontend dashboard
 ```
 
-- [ ] **Step 3: 移动数据文件**
+- [x] **Step 3: 移动数据文件**
 ```bash
 mkdir -p data
 mv core/data/threads.json data/threads.json 2>/dev/null || true
@@ -79,7 +79,7 @@ touch data/.gitkeep
 mkdir -p data/sample
 ```
 
-- [ ] **Step 4: 创建样例数据**
+- [x] **Step 4: 创建样例数据**
 
 创建 `data/sample/threads.json`：
 ```json
@@ -101,12 +101,12 @@ mkdir -p data/sample
 }
 ```
 
-- [ ] **Step 5: 删除旧目录**
+- [x] **Step 5: 删除旧目录**
 ```bash
 rm -rf life-dashboard/
 ```
 
-- [ ] **Step 6: 更新 .gitignore**
+- [x] **Step 6: 更新 .gitignore**
 
 在 `.gitignore` 末尾追加：
 ```
@@ -118,13 +118,13 @@ data/**/*.json
 !data/.gitkeep
 ```
 
-- [ ] **Step 7: 确认结构**
+- [x] **Step 7: 确认结构**
 ```bash
 ls core/ dashboard/ data/
 # 期望：core/ 有 app/ requirements.txt；dashboard/ 有 src/ package.json；data/ 有 .gitkeep sample/
 ```
 
-- [ ] **Step 8: 提交**
+- [x] **Step 8: 提交**
 ```bash
 git add -A
 git commit -m "refactor: flatten life-dashboard → core/dashboard/data three-layer structure"
@@ -146,7 +146,7 @@ git commit -m "refactor: flatten life-dashboard → core/dashboard/data three-la
   - `ThreadBase.horizon: Horizon = Horizon.none`
   - `ThreadUpdate.horizon: Optional[Horizon] = None`
 
-- [ ] **Step 1: 安装 pytest（若未安装）**
+- [x] **Step 1: 安装 pytest（若未安装）**
 ```bash
 cd core
 pip install pytest httpx 2>/dev/null || true
@@ -154,13 +154,13 @@ pip install pytest httpx 2>/dev/null || true
 grep -q pytest requirements.txt || echo "pytest\nhttpx" >> requirements.txt
 ```
 
-- [ ] **Step 2: 创建测试目录**
+- [x] **Step 2: 创建测试目录**
 ```bash
 mkdir -p core/tests
 touch core/tests/__init__.py
 ```
 
-- [ ] **Step 3: 写失败测试**
+- [x] **Step 3: 写失败测试**
 
 创建 `core/tests/test_models.py`：
 ```python
@@ -197,13 +197,13 @@ def test_thread_update_horizon_optional():
     assert u2.horizon is None
 ```
 
-- [ ] **Step 4: 运行测试确认失败**
+- [x] **Step 4: 运行测试确认失败**
 ```bash
 cd core && python -m pytest tests/test_models.py -v 2>&1 | head -20
 # 期望：FAILED / ImportError（Horizon 尚未定义）
 ```
 
-- [ ] **Step 5: 修改 core/app/models.py**
+- [x] **Step 5: 修改 core/app/models.py**
 
 在 `ThreadType` 枚举末尾加 `entry = "entry"`；在文件顶部加 `Horizon` 枚举；在 `ThreadBase` 和 `ThreadUpdate` 加 horizon 字段：
 
@@ -281,13 +281,13 @@ class Thread(ThreadBase):
     updatedAt: str
 ```
 
-- [ ] **Step 6: 运行测试确认通过**
+- [x] **Step 6: 运行测试确认通过**
 ```bash
 cd core && python -m pytest tests/test_models.py -v
 # 期望：5 passed
 ```
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 ```bash
 git add core/app/models.py core/tests/
 git commit -m "feat(core): add Horizon enum and entry type to data model"
@@ -308,7 +308,7 @@ git commit -m "feat(core): add Horizon enum and entry type to data model"
   - `class JsonStorage` 实现上述 Protocol
   - `def get_storage() -> Storage` 工厂，读 `MANBOARD_DATA_FILE` 环境变量
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `core/tests/test_storage.py`：
 ```python
@@ -381,13 +381,13 @@ def test_get_storage_env(tmp_path, monkeypatch):
     assert isinstance(s, JsonStorage)
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 ```bash
 cd core && python -m pytest tests/test_storage.py -v 2>&1 | head -20
 # 期望：ImportError 或 FAILED
 ```
 
-- [ ] **Step 3: 重构 core/app/storage.py**
+- [x] **Step 3: 重构 core/app/storage.py**
 
 ```python
 import json
@@ -496,13 +496,13 @@ def get_storage() -> Storage:
     return JsonStorage(path)
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 ```bash
 cd core && python -m pytest tests/test_storage.py -v
 # 期望：全部 PASS
 ```
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 ```bash
 git add core/app/storage.py core/tests/test_storage.py
 git commit -m "feat(core): Storage Protocol + JsonStorage with lazy horizon migration"
@@ -524,7 +524,7 @@ git commit -m "feat(core): Storage Protocol + JsonStorage with lazy horizon migr
   - `class Connector(Protocol)` with `fetch() -> list[Thread]`
   - routes 全部通过 `Depends(get_storage)` 注入 storage
 
-- [ ] **Step 1: 写 API 测试（失败测试）**
+- [x] **Step 1: 写 API 测试（失败测试）**
 
 创建 `core/tests/test_api.py`：
 ```python
@@ -585,13 +585,13 @@ def test_delete(client):
     assert client.get("/threads").json() == []
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 ```bash
 cd core && python -m pytest tests/test_api.py -v 2>&1 | head -20
 # 期望：FAILED（routes 还没改成 Depends 注入）
 ```
 
-- [ ] **Step 3: 创建 core/app/connectors.py**
+- [x] **Step 3: 创建 core/app/connectors.py**
 ```python
 from typing import Protocol
 from .models import Thread
@@ -604,7 +604,7 @@ class Connector(Protocol):
         ...
 ```
 
-- [ ] **Step 4: 重构 core/app/routes.py（Depends 注入）**
+- [x] **Step 4: 重构 core/app/routes.py（Depends 注入）**
 ```python
 from fastapi import APIRouter, Depends, HTTPException, status
 from .models import ThreadCreate, ThreadUpdate, Thread
@@ -639,13 +639,13 @@ def delete_thread(thread_id: str, storage: Storage = Depends(get_storage)):
         raise HTTPException(status_code=404, detail="Thread not found")
 ```
 
-- [ ] **Step 5: 运行全部后端测试**
+- [x] **Step 5: 运行全部后端测试**
 ```bash
 cd core && python -m pytest tests/ -v
 # 期望：全部 PASS（test_models + test_storage + test_api）
 ```
 
-- [ ] **Step 6: 确认服务可本地启动**
+- [x] **Step 6: 确认服务可本地启动**
 ```bash
 cd core && MANBOARD_DATA_FILE=../data/threads.json python -m uvicorn app.main:app --reload --port 8000 &
 sleep 2 && curl -s http://localhost:8000/health
@@ -653,7 +653,7 @@ sleep 2 && curl -s http://localhost:8000/health
 kill %1 2>/dev/null || true
 ```
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 ```bash
 git add core/app/connectors.py core/app/routes.py core/tests/test_api.py
 git commit -m "feat(core): add Connector contract, refactor routes to Depends injection"
@@ -676,7 +676,7 @@ git commit -m "feat(core): add Connector contract, refactor routes to Depends in
   - `HORIZON_LABELS: Record<ThreadHorizon, string>`
   - `ThreadForm` 新增 horizon 选择器
 
-- [ ] **Step 1: 更新 dashboard/src/types/thread.ts**
+- [x] **Step 1: 更新 dashboard/src/types/thread.ts**
 
 在文件中加入 `ThreadHorizon`，并将其加到 `Thread`、`ThreadInput`：
 ```typescript
@@ -772,7 +772,7 @@ export const PRIORITY_LABELS: Record<ThreadPriority, string> = {
 };
 ```
 
-- [ ] **Step 2: 更新 ThreadForm.tsx — 加 horizon 选择器**
+- [x] **Step 2: 更新 ThreadForm.tsx — 加 horizon 选择器**
 
 在 `emptyInput` 中加 `horizon: "none"`；在表单的三列 grid 中加第四列（或单独一行），内容为 horizon 下拉：
 
@@ -829,13 +829,13 @@ import {
 </div>
 ```
 
-- [ ] **Step 3: 确认 TypeScript 编译无报错**
+- [x] **Step 3: 确认 TypeScript 编译无报错**
 ```bash
 cd dashboard && npm run build 2>&1 | tail -10
 # 期望：无 error，只有可能的 warning
 ```
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 ```bash
 git add dashboard/src/types/thread.ts dashboard/src/components/ThreadForm.tsx
 git commit -m "feat(dashboard): add ThreadHorizon type, entry type, horizon selector in form"
@@ -852,7 +852,7 @@ git commit -m "feat(dashboard): add ThreadHorizon type, entry type, horizon sele
 - Consumes: `Thread`, `ThreadHorizon`, `HORIZON_LABELS`, `TYPE_LABELS` from `../types/thread`
 - Produces: 9 分区布局；分区逻辑视图排他（horizon → 时间区，else type → 内容区）
 
-- [ ] **Step 1: 写新的 App.tsx**
+- [x] **Step 1: 写新的 App.tsx**
 
 完整替换 `dashboard/src/App.tsx`：
 
@@ -1055,13 +1055,13 @@ export default function App() {
 }
 ```
 
-- [ ] **Step 2: 确认 TypeScript 编译无报错**
+- [x] **Step 2: 确认 TypeScript 编译无报错**
 ```bash
 cd dashboard && npm run build 2>&1 | tail -10
 # 期望：无 error
 ```
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 ```bash
 git add dashboard/src/App.tsx
 git commit -m "feat(dashboard): refactor to 9-section layout with horizon-based view routing"
@@ -1074,7 +1074,7 @@ git commit -m "feat(dashboard): refactor to 9-section layout with horizon-based 
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: 更新 README.md**
+- [x] **Step 1: 更新 README.md**
 
 完整替换 `README.md`：
 ```markdown
@@ -1136,19 +1136,19 @@ cd core && python -m pytest tests/ -v
 \`\`\`
 ```
 
-- [ ] **Step 2: 运行全部后端测试最终确认**
+- [x] **Step 2: 运行全部后端测试最终确认**
 ```bash
 cd core && python -m pytest tests/ -v
 # 期望：全部 PASS
 ```
 
-- [ ] **Step 3: 前端构建最终确认**
+- [x] **Step 3: 前端构建最终确认**
 ```bash
 cd dashboard && npm run build 2>&1 | tail -5
 # 期望：无 error
 ```
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 ```bash
 git add README.md
 git commit -m "docs: update README for three-layer structure and new startup instructions"
