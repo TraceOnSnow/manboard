@@ -42,6 +42,8 @@ data/*.db
 data/*.sqlite
 
 # Comet/Superpowers/CodeGraph platform tooling (installed via comet init, not project code)
+.claude/commands/
+.claude/skills/
 .agents/
 .codex/
 .codegraph/
