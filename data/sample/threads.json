@@ -1,0 +1,72 @@
+{
+  "sample-001": {
+    "id": "sample-001",
+    "title": "Finish project proposal",
+    "type": "todo",
+    "status": "active",
+    "priority": "now",
+    "horizon": "today",
+    "area": "work",
+    "nextAction": "Write introduction section",
+    "notes": null,
+    "lastTouched": "2026-07-10T00:00:00.000000+00:00",
+    "createdAt": "2026-07-10T00:00:00.000000+00:00",
+    "updatedAt": "2026-07-10T00:00:00.000000+00:00"
+  },
+  "sample-002": {
+    "id": "sample-002",
+    "title": "Read Designing Data-Intensive Applications",
+    "type": "novel",
+    "status": "active",
+    "priority": "next",
+    "horizon": "none",
+    "area": null,
+    "nextAction": "Chapter 5: Replication",
+    "notes": null,
+    "lastTouched": "2026-07-10T00:00:00.000000+00:00",
+    "createdAt": "2026-07-10T00:00:00.000000+00:00",
+    "updatedAt": "2026-07-10T00:00:00.000000+00:00"
+  },
+  "sample-003": {
+    "id": "sample-003",
+    "title": "manboard",
+    "type": "project",
+    "status": "active",
+    "priority": "now",
+    "horizon": "week",
+    "area": "dev",
+    "nextAction": "Complete foundation build",
+    "notes": null,
+    "lastTouched": "2026-07-10T00:00:00.000000+00:00",
+    "createdAt": "2026-07-10T00:00:00.000000+00:00",
+    "updatedAt": "2026-07-10T00:00:00.000000+00:00"
+  },
+  "sample-004": {
+    "id": "sample-004",
+    "title": "Personal AI OS vision",
+    "type": "research",
+    "status": "active",
+    "priority": "later",
+    "horizon": "long",
+    "area": null,
+    "nextAction": null,
+    "notes": "Exploring how personal data can be unified in one dashboard",
+    "lastTouched": "2026-07-10T00:00:00.000000+00:00",
+    "createdAt": "2026-07-10T00:00:00.000000+00:00",
+    "updatedAt": "2026-07-10T00:00:00.000000+00:00"
+  },
+  "sample-005": {
+    "id": "sample-005",
+    "title": "Claude Code docs",
+    "type": "entry",
+    "status": "active",
+    "priority": "next",
+    "horizon": "none",
+    "area": "dev",
+    "nextAction": null,
+    "notes": "https://docs.anthropic.com/claude/docs",
+    "lastTouched": "2026-07-10T00:00:00.000000+00:00",
+    "createdAt": "2026-07-10T00:00:00.000000+00:00",
+    "updatedAt": "2026-07-10T00:00:00.000000+00:00"
+  }
+}
