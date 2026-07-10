@@ -14,7 +14,15 @@ class ThreadType(str, Enum):
     video = "video"
     ai_chat = "ai-chat"
     self_improvement = "self-improvement"
+    entry = "entry"
     other = "other"
+
+
+class Horizon(str, Enum):
+    today = "today"
+    week = "week"
+    long = "long"
+    none = "none"
 
 
 class ThreadStatus(str, Enum):
@@ -35,6 +43,7 @@ class ThreadBase(BaseModel):
     type: ThreadType
     status: ThreadStatus = ThreadStatus.active
     priority: ThreadPriority = ThreadPriority.next
+    horizon: Horizon = Horizon.none
     area: Optional[str] = None
     nextAction: Optional[str] = None
     notes: Optional[str] = None
@@ -49,6 +58,7 @@ class ThreadUpdate(BaseModel):
     type: Optional[ThreadType] = None
     status: Optional[ThreadStatus] = None
     priority: Optional[ThreadPriority] = None
+    horizon: Optional[Horizon] = None
     area: Optional[str] = None
     nextAction: Optional[str] = None
     notes: Optional[str] = None
