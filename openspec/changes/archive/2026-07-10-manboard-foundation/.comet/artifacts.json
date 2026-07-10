@@ -4,5 +4,6 @@
   "openspec_tasks": "openspec/changes/manboard-foundation/tasks.md",
   "openspec_delta_spec": "openspec/changes/manboard-foundation/specs/connector-contract/spec.md",
   "handoff_context": "openspec/changes/manboard-foundation/.comet/handoff/design-context.json",
-  "handoff_markdown": "openspec/changes/manboard-foundation/.comet/handoff/design-context.md"
+  "handoff_markdown": "openspec/changes/manboard-foundation/.comet/handoff/design-context.md",
+  "archive_directory": "openspec/changes/archive/2026-07-10-manboard-foundation"
 }

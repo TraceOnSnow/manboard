@@ -2,6 +2,8 @@
 comet_change: manboard-foundation
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-10-manboard-foundation
+status: final
 ---
 
 # manboard-foundation 技术设计（精简版）
@@ -79,3 +81,4 @@ manboard 当前是单层应用 `life-dashboard/{backend, frontend}`，扁平 Thr
 - **视图排他**、**懒迁移** 的设计决策已记录在本 Design Doc 上方，build 阶段据此实现。
 - **懒迁移** 的验收场景已被 `core-data-model` spec 的「旧数据默认 horizon」覆盖。
 - 若后续需要 spec 级 rigor，在独立 change 中补 delta spec。
+

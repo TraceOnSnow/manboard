@@ -1,3 +1,7 @@
+---
+archived-with: 2026-07-10-manboard-foundation
+status: final
+---
 # manboard-foundation 实施计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
