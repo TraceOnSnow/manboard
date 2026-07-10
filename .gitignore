@@ -33,9 +33,20 @@ Thumbs.db
 
 # Vite
 *.tsbuildinfo
+.vite/
 
 # Private data (framework is open source, data is not)
 data/*.json
 !data/sample/
 data/*.db
 data/*.sqlite
+
+# Comet/Superpowers/CodeGraph platform tooling (installed via comet init, not project code)
+.agents/
+.codex/
+.codegraph/
+skills-lock.json
+
+# openspec CLI dependency installed at repo root by comet init
+/package.json
+/package-lock.json

@@ -8,14 +8,14 @@ subagent_dispatch: null
 tdd_mode: direct
 review_mode: standard
 isolation: branch
-verify_mode: null
+verify_mode: full
 auto_transition: true
 base_ref: 28941ebcfa93230d78a3ac8d49332705c330e8a7
 design_doc: docs/superpowers/specs/2026-07-09-manboard-foundation-design.md
 plan: docs/superpowers/plans/2026-07-09-manboard-foundation.md
 verify_result: pending
-verification_report: null
-branch_status: pending
+verification_report: docs/superpowers/reports/2026-07-10-manboard-foundation-verify.md
+branch_status: handled
 created_at: 2026-07-09
 verified_at: null
 archived: false
