@@ -3,31 +3,63 @@ import { api } from "./api/threads";
 import { ThreadForm } from "./components/ThreadForm";
 import { ThreadCard } from "./components/ThreadCard";
 import {
-  TYPE_LABELS,
-  STATUS_LABELS,
-  PRIORITY_LABELS,
   type Thread,
   type ThreadInput,
   type ThreadStatus,
-  type ThreadType,
   type ThreadPriority,
+  type ThreadType,
 } from "./types/thread";
 
-type StatusFilter = "all" | ThreadStatus;
-type PriorityFilter = "all" | ThreadPriority;
-type TypeFilter = "all" | ThreadType;
-
 const priorityRank: Record<ThreadPriority, number> = { now: 0, next: 1, later: 2 };
+
+const MEDIA_TYPES: ThreadType[] = ["game", "novel", "anime", "video"];
+
+interface Section {
+  key: string;
+  label: string;
+  filter: (t: Thread) => boolean;
+}
+
+const SECTIONS: Section[] = [
+  { key: "today", label: "今日目标", filter: (t) => t.horizon === "today" },
+  { key: "week", label: "本周目标", filter: (t) => t.horizon === "week" },
+  { key: "long", label: "长期目标", filter: (t) => t.horizon === "long" },
+  {
+    key: "project",
+    label: "当前项目",
+    filter: (t) => t.horizon === "none" && t.type === "project",
+  },
+  {
+    key: "todo",
+    label: "待办",
+    filter: (t) => t.horizon === "none" && t.type === "todo",
+  },
+  {
+    key: "ai-chat",
+    label: "AI 对话摘要",
+    filter: (t) => t.horizon === "none" && t.type === "ai-chat",
+  },
+  {
+    key: "research",
+    label: "研究方向",
+    filter: (t) => t.horizon === "none" && t.type === "research",
+  },
+  {
+    key: "media",
+    label: "正在玩 / 看",
+    filter: (t) => t.horizon === "none" && MEDIA_TYPES.includes(t.type),
+  },
+  {
+    key: "entry",
+    label: "工作流入口",
+    filter: (t) => t.horizon === "none" && t.type === "entry",
+  },
+];
 
 export default function App() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Thread | null>(null);
 
@@ -47,13 +79,16 @@ export default function App() {
     load();
   }, []);
 
-  const filtered = useMemo(() => {
-    return threads
-      .filter((t) => statusFilter === "all" || t.status === statusFilter)
-      .filter((t) => priorityFilter === "all" || t.priority === priorityFilter)
-      .filter((t) => typeFilter === "all" || t.type === typeFilter)
-      .sort((a, b) => priorityRank[a.priority] - priorityRank[b.priority]);
-  }, [threads, statusFilter, priorityFilter, typeFilter]);
+  const sections = useMemo(
+    () =>
+      SECTIONS.map((s) => ({
+        ...s,
+        items: threads
+          .filter(s.filter)
+          .sort((a, b) => priorityRank[a.priority] - priorityRank[b.priority]),
+      })),
+    [threads]
+  );
 
   const handleCreate = async (input: ThreadInput) => {
     await api.createThread(input);
@@ -69,7 +104,7 @@ export default function App() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("确认删除这条 Thread？")) return;
+    if (!confirm("确认删除这条记录？")) return;
     await api.deleteThread(id);
     await load();
   };
@@ -79,16 +114,13 @@ export default function App() {
     await load();
   };
 
-  const selectClass =
-    "rounded border border-slate-300 bg-white px-2 py-1 text-sm focus:border-slate-500 focus:outline-none";
-
   return (
     <div className="min-h-full bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6">
         <header className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Life Dashboard</h1>
-            <p className="text-sm text-slate-500">个人状态面板 · {threads.length} 条 Thread</p>
+            <h1 className="text-2xl font-bold text-slate-900">manboard</h1>
+            <p className="text-sm text-slate-500">个人中枢 · {threads.length} 条记录</p>
           </div>
           <button
             onClick={() => {
@@ -101,57 +133,6 @@ export default function App() {
           </button>
         </header>
 
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <select
-            className={selectClass}
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
-          >
-            <option value="all">全部优先级</option>
-            {(Object.keys(PRIORITY_LABELS) as ThreadPriority[]).map((p) => (
-              <option key={p} value={p}>
-                {PRIORITY_LABELS[p]}
-              </option>
-            ))}
-          </select>
-          <select
-            className={selectClass}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          >
-            <option value="all">全部状态</option>
-            {(Object.keys(STATUS_LABELS) as ThreadStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-          <select
-            className={selectClass}
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-          >
-            <option value="all">全部类型</option>
-            {(Object.keys(TYPE_LABELS) as ThreadType[]).map((t) => (
-              <option key={t} value={t}>
-                {TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-          {(statusFilter !== "all" || priorityFilter !== "all" || typeFilter !== "all") && (
-            <button
-              onClick={() => {
-                setStatusFilter("all");
-                setPriorityFilter("all");
-                setTypeFilter("all");
-              }}
-              className="text-sm text-slate-500 hover:text-slate-700"
-            >
-              清除筛选
-            </button>
-          )}
-        </div>
-
         {error && (
           <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {error}
@@ -160,23 +141,37 @@ export default function App() {
 
         {loading ? (
           <p className="text-sm text-slate-500">加载中…</p>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-slate-400">
-            {threads.length === 0 ? "还没有 Thread，点击右上角「新增」开始。" : "当前筛选下没有 Thread。"}
-          </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {filtered.map((t) => (
-              <ThreadCard
-                key={t.id}
-                thread={t}
-                onEdit={() => {
-                  setEditing(t);
-                  setShowForm(false);
-                }}
-                onDelete={() => handleDelete(t.id)}
-                onCycleStatus={(next) => handleCycleStatus(t, next)}
-              />
+          <div className="space-y-6">
+            {sections.map((section) => (
+              <section key={section.key}>
+                <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                  {section.label}
+                  <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-xs font-normal text-slate-600">
+                    {section.items.length}
+                  </span>
+                </h2>
+                {section.items.length === 0 ? (
+                  <div className="rounded border border-dashed border-slate-200 bg-white p-3 text-center text-xs text-slate-400">
+                    空
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {section.items.map((t) => (
+                      <ThreadCard
+                        key={t.id}
+                        thread={t}
+                        onEdit={() => {
+                          setEditing(t);
+                          setShowForm(false);
+                        }}
+                        onDelete={() => handleDelete(t.id)}
+                        onCycleStatus={(next) => handleCycleStatus(t, next)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
             ))}
           </div>
         )}
@@ -186,7 +181,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-5 shadow-xl">
             <h2 className="mb-3 text-lg font-semibold text-slate-900">
-              {editing ? "编辑 Thread" : "新增 Thread"}
+              {editing ? "编辑" : "新增"}
             </h2>
             <ThreadForm
               initial={editing}
