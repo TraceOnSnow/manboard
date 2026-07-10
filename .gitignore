@@ -33,3 +33,9 @@ Thumbs.db
 
 # Vite
 *.tsbuildinfo
+
+# Private data (framework is open source, data is not)
+data/*.json
+!data/sample/
+data/*.db
+data/*.sqlite

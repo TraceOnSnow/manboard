@@ -3,9 +3,11 @@ import {
   THREAD_TYPES,
   THREAD_STATUSES,
   THREAD_PRIORITIES,
+  THREAD_HORIZONS,
   TYPE_LABELS,
   STATUS_LABELS,
   PRIORITY_LABELS,
+  HORIZON_LABELS,
   type Thread,
   type ThreadInput,
 } from "../types/thread";
@@ -21,6 +23,7 @@ const emptyInput: ThreadInput = {
   type: "todo",
   status: "active",
   priority: "next",
+  horizon: "none",
   area: "",
   nextAction: "",
   notes: "",
@@ -38,6 +41,7 @@ export function ThreadForm({ initial, onSubmit, onCancel }: ThreadFormProps) {
         type: initial.type,
         status: initial.status,
         priority: initial.priority,
+        horizon: initial.horizon ?? "none",
         area: initial.area ?? "",
         nextAction: initial.nextAction ?? "",
         notes: initial.notes ?? "",
@@ -90,7 +94,7 @@ export function ThreadForm({ initial, onSubmit, onCancel }: ThreadFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         <div>
           <label className={labelClass}>类型</label>
           <select
@@ -129,6 +133,20 @@ export function ThreadForm({ initial, onSubmit, onCancel }: ThreadFormProps) {
             {THREAD_PRIORITIES.map((p) => (
               <option key={p} value={p}>
                 {PRIORITY_LABELS[p]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>时间范围</label>
+          <select
+            className={fieldClass}
+            value={input.horizon ?? "none"}
+            onChange={(e) => update("horizon", e.target.value as ThreadInput["horizon"])}
+          >
+            {THREAD_HORIZONS.map((h) => (
+              <option key={h} value={h}>
+                {HORIZON_LABELS[h]}
               </option>
             ))}
           </select>

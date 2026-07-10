@@ -9,11 +9,14 @@ export type ThreadType =
   | "video"
   | "ai-chat"
   | "self-improvement"
+  | "entry"
   | "other";
 
 export type ThreadStatus = "active" | "paused" | "parked" | "done";
 
 export type ThreadPriority = "now" | "next" | "later";
+
+export type ThreadHorizon = "today" | "week" | "long" | "none";
 
 export interface Thread {
   id: string;
@@ -21,6 +24,7 @@ export interface Thread {
   type: ThreadType;
   status: ThreadStatus;
   priority: ThreadPriority;
+  horizon: ThreadHorizon;
   area?: string | null;
   nextAction?: string | null;
   notes?: string | null;
@@ -34,6 +38,7 @@ export interface ThreadInput {
   type: ThreadType;
   status?: ThreadStatus;
   priority?: ThreadPriority;
+  horizon?: ThreadHorizon;
   area?: string;
   nextAction?: string;
   notes?: string;
@@ -52,12 +57,15 @@ export const THREAD_TYPES: ThreadType[] = [
   "video",
   "ai-chat",
   "self-improvement",
+  "entry",
   "other",
 ];
 
 export const THREAD_STATUSES: ThreadStatus[] = ["active", "paused", "parked", "done"];
 
 export const THREAD_PRIORITIES: ThreadPriority[] = ["now", "next", "later"];
+
+export const THREAD_HORIZONS: ThreadHorizon[] = ["today", "week", "long", "none"];
 
 export const TYPE_LABELS: Record<ThreadType, string> = {
   goal: "长期目标",
@@ -70,6 +78,7 @@ export const TYPE_LABELS: Record<ThreadType, string> = {
   video: "视频",
   "ai-chat": "AI 对话",
   "self-improvement": "自我提升",
+  entry: "工作流入口",
   other: "其他",
 };
 
@@ -84,4 +93,11 @@ export const PRIORITY_LABELS: Record<ThreadPriority, string> = {
   now: "现在",
   next: "下一步",
   later: "稍后",
+};
+
+export const HORIZON_LABELS: Record<ThreadHorizon, string> = {
+  today: "今日",
+  week: "本周",
+  long: "长期",
+  none: "无",
 };

@@ -1,13 +1,13 @@
 workflow: full
 language: zh-CN
-phase: build
+phase: verify
 context_compression: off
-build_mode: null
+build_mode: executing-plans
 build_pause: null
 subagent_dispatch: null
-tdd_mode: null
+tdd_mode: direct
 review_mode: standard
-isolation: null
+isolation: branch
 verify_mode: null
 auto_transition: true
 base_ref: 28941ebcfa93230d78a3ac8d49332705c330e8a7
