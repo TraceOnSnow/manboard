@@ -92,17 +92,14 @@ Every item is a **Thread** with these key fields:
 - `horizon=today|week|long` → item appears only in the matching time section
 - `horizon=none` → item appears in its type-based content section
 
-## Sections (fixed order)
+## Dashboard workflows
 
-1. 今日目标 — horizon=today
-2. 本周目标 — horizon=week
-3. 长期目标 — horizon=long
-4. 当前项目 — type=project, horizon=none
-5. 待办 — type=todo, horizon=none
-6. AI 对话摘要 — type=ai-chat, horizon=none
-7. 研究方向 — type=research, horizon=none
-8. 正在玩 / 看 — type ∈ {game, novel, anime, video}, horizon=none
-9. 工作流入口 — type=entry, horizon=none (`notes` field stores URL/command)
+- **快速记录** — 首页输入一句话即可创建 Inbox 条目（`type=other`, `horizon=none`）；之后在详情抽屉中把它整理为项目、待办、研究或媒体记录。
+- **今日待办** — `type=todo` 且 `horizon=today` 的条目显示为低摩擦复选框，直接在进行中与完成间切换。
+- **长期内容** — 项目、研究和媒体按最近更新时间排序；完成项默认折叠，避免干扰日常浏览。
+- **分区新增** — 每个板块的“新增”会预填对应的 type/horizon；桌面端侧栏用于跳转板块，条目编辑在右侧详情抽屉中进行。
+
+原有的目标、项目、待办、AI 对话、研究、媒体和工作流入口仍由 `type` + `horizon` 推导，后端 API 和存储格式无需迁移。
 
 ## Backend tests
 
