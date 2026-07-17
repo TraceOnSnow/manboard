@@ -1,38 +1,72 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from .models import Thread, ThreadCreate, ThreadUpdate
+from .models import Box, BoxCreate, BoxDelete, BoxUpdate, Task, TaskCreate, TaskUpdate
 from .storage import Storage, get_storage
 
-router = APIRouter(prefix="/threads", tags=["threads"])
+boxes_router = APIRouter(prefix="/boxes", tags=["boxes"])
+tasks_router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
-@router.get("", response_model=list[Thread])
-def list_threads(store: Storage = Depends(get_storage)):
-    return store.list()
+@boxes_router.get("", response_model=list[Box])
+async def list_boxes(store: Storage = Depends(get_storage)):
+    return store.list_boxes()
 
 
-@router.post("", response_model=Thread, status_code=status.HTTP_201_CREATED)
-def create_thread(payload: ThreadCreate, store: Storage = Depends(get_storage)):
-    return store.create(payload)
+@boxes_router.post("", response_model=Box, status_code=status.HTTP_201_CREATED)
+async def create_box(payload: BoxCreate, store: Storage = Depends(get_storage)):
+    return store.create_box(payload)
 
 
-@router.get("/{thread_id}", response_model=Thread)
-def get_thread(thread_id: str, store: Storage = Depends(get_storage)):
+@boxes_router.patch("/{box_id}", response_model=Box)
+async def update_box(box_id: str, payload: BoxUpdate, store: Storage = Depends(get_storage)):
     try:
-        return store.get(thread_id)
+        return store.update_box(box_id, payload)
     except KeyError:
-        raise HTTPException(status_code=404, detail="Thread not found")
+        raise HTTPException(status_code=404, detail="Box not found")
 
 
-@router.patch("/{thread_id}", response_model=Thread)
-def update_thread(thread_id: str, payload: ThreadUpdate, store: Storage = Depends(get_storage)):
+@boxes_router.delete("/{box_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_box(box_id: str, payload: BoxDelete, store: Storage = Depends(get_storage)):
     try:
-        return store.update(thread_id, payload)
+        store.delete_box(box_id, payload)
     except KeyError:
-        raise HTTPException(status_code=404, detail="Thread not found")
+        raise HTTPException(status_code=404, detail="Box not found")
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error))
 
 
-@router.delete("/{thread_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_thread(thread_id: str, store: Storage = Depends(get_storage)):
-    if not store.delete(thread_id):
-        raise HTTPException(status_code=404, detail="Thread not found")
+@tasks_router.get("", response_model=list[Task])
+async def list_tasks(store: Storage = Depends(get_storage)):
+    return store.list_tasks()
+
+
+@tasks_router.post("", response_model=Task, status_code=status.HTTP_201_CREATED)
+async def create_task(payload: TaskCreate, store: Storage = Depends(get_storage)):
+    try:
+        return store.create_task(payload)
+    except (KeyError, ValueError):
+        raise HTTPException(status_code=404, detail="Box not found")
+
+
+@tasks_router.get("/{task_id}", response_model=Task)
+async def get_task(task_id: str, store: Storage = Depends(get_storage)):
+    try:
+        return store.get_task(task_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+
+@tasks_router.patch("/{task_id}", response_model=Task)
+async def update_task(task_id: str, payload: TaskUpdate, store: Storage = Depends(get_storage)):
+    try:
+        return store.update_task(task_id, payload)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Box not found")
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+
+@tasks_router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(task_id: str, store: Storage = Depends(get_storage)):
+    if not store.delete_task(task_id):
+        raise HTTPException(status_code=404, detail="Task not found")

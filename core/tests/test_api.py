@@ -1,83 +1,193 @@
+import httpx2
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
-from app.models import Horizon, ThreadCreate, ThreadType
-from app.storage import JsonStorage, get_storage
+import pytest_asyncio
+
 from app.connectors import Connector
+from app.main import app
+from app.storage import JsonStorage, get_storage
 
 
-@pytest.fixture
-def client(tmp_path):
-    path = str(tmp_path / "threads.json")
-    store = JsonStorage(path)
-    app.dependency_overrides[get_storage] = lambda: store
-    yield TestClient(app)
+@pytest_asyncio.fixture
+async def client(tmp_path):
+    store = JsonStorage(str(tmp_path / "threads.json"))
+    async def get_test_storage():
+        return store
+
+    app.dependency_overrides[get_storage] = get_test_storage
+    transport = httpx2.ASGITransport(app=app)
+    async with httpx2.AsyncClient(transport=transport, base_url="http://testserver") as api_client:
+        yield api_client
     app.dependency_overrides.clear()
 
 
-def test_health(client):
-    r = client.get("/health")
-    assert r.status_code == 200
+async def create_box(client, title="Box", x=4):
+    response = await client.post(
+        "/boxes",
+        json={"title": title, "layout": {"x": x, "y": 0, "w": 4, "h": 6}},
+    )
+    assert response.status_code == 201
+    return response.json()
 
 
-def test_create_and_list(client):
-    r = client.post("/threads", json={"title": "API item", "type": "todo"})
-    assert r.status_code == 201
-    body = r.json()
-    assert body["horizon"] == "none"
+@pytest.mark.asyncio
+async def test_health(client):
+    response = await client.get("/health")
 
-    r = client.get("/threads")
-    assert r.status_code == 200
-    assert len(r.json()) == 1
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 
 
-def test_create_with_horizon(client):
-    r = client.post("/threads", json={"title": "Today task", "type": "todo", "horizon": "today"})
-    assert r.status_code == 201
-    assert r.json()["horizon"] == "today"
+@pytest.mark.asyncio
+async def test_list_boxes_starts_with_an_inbox(client):
+    response = await client.get("/boxes")
+
+    assert response.status_code == 200
+    boxes = response.json()
+    assert len(boxes) == 1
+    assert boxes[0]["title"] == "Inbox"
+    assert boxes[0]["layout"] == {"x": 0, "y": 0, "w": 4, "h": 6}
 
 
-def test_invalid_horizon_returns_422(client):
-    r = client.post("/threads", json={"title": "Bad", "type": "todo", "horizon": "yesterday"})
-    assert r.status_code == 422
+@pytest.mark.asyncio
+async def test_create_update_and_delete_box(client):
+    created = await create_box(client, title="今日待办")
+
+    updated = await client.patch(
+        f"/boxes/{created['id']}",
+        json={"title": "今天", "layout": {"x": 6, "y": 2, "w": 6, "h": 8}},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["title"] == "今天"
+    assert updated.json()["layout"] == {"x": 6, "y": 2, "w": 6, "h": 8}
+
+    deleted = await client.request(
+        "DELETE", f"/boxes/{created['id']}", json={"taskDisposition": "delete"}
+    )
+    assert deleted.status_code == 204
+    assert all(box["id"] != created["id"] for box in (await client.get("/boxes")).json())
 
 
-def test_get_thread(client):
-    created = client.post("/threads", json={"title": "Fetch me", "type": "project"}).json()
-    r = client.get(f"/threads/{created['id']}")
-    assert r.status_code == 200
-    assert r.json()["id"] == created["id"]
+@pytest.mark.asyncio
+async def test_missing_box_returns_404(client):
+    assert (await client.patch("/boxes/missing", json={"title": "Nope"})).status_code == 404
+    assert (
+        await client.request("DELETE", "/boxes/missing", json={"taskDisposition": "delete"})
+    ).status_code == 404
 
 
-def test_get_missing_returns_404(client):
-    r = client.get("/threads/nope")
-    assert r.status_code == 404
+@pytest.mark.asyncio
+async def test_create_list_get_update_and_delete_task(client):
+    inbox = (await client.get("/boxes")).json()[0]
+    created = await client.post(
+        "/tasks",
+        json={
+            "title": "Ship board",
+            "boxId": inbox["id"],
+            "tags": ["work", " work "],
+            "priority": "high",
+            "dueDate": "2026-07-18",
+            "details": "Release the new board.",
+        },
+    )
+    assert created.status_code == 201
+    task = created.json()
+    assert task["tags"] == ["work"]
+    assert task["completedAt"] is None
+
+    listed = await client.get("/tasks")
+    assert listed.status_code == 200
+    assert [item["id"] for item in listed.json()] == [task["id"]]
+
+    fetched = await client.get(f"/tasks/{task['id']}")
+    assert fetched.status_code == 200
+    assert fetched.json()["title"] == "Ship board"
+
+    updated = await client.patch(
+        f"/tasks/{task['id']}",
+        json={"title": "Ship Box board", "priority": "medium", "dueDate": None},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["title"] == "Ship Box board"
+    assert updated.json()["priority"] == "medium"
+    assert updated.json()["dueDate"] is None
+
+    deleted = await client.delete(f"/tasks/{task['id']}")
+    assert deleted.status_code == 204
+    assert (await client.get(f"/tasks/{task['id']}")).status_code == 404
 
 
-def test_update_thread(client):
-    created = client.post("/threads", json={"title": "Old", "type": "todo"}).json()
-    r = client.patch(f"/threads/{created['id']}", json={"title": "New", "horizon": "week"})
-    assert r.status_code == 200
-    assert r.json()["title"] == "New"
-    assert r.json()["horizon"] == "week"
+@pytest.mark.asyncio
+async def test_task_rejects_invalid_priority_due_date_and_unknown_box(client):
+    inbox = (await client.get("/boxes")).json()[0]
+
+    assert (
+        await client.post("/tasks", json={"title": "Bad priority", "boxId": inbox["id"], "priority": "now"})
+    ).status_code == 422
+    assert (
+        await client.post("/tasks", json={"title": "Bad date", "boxId": inbox["id"], "dueDate": "2026/07/18"})
+    ).status_code == 422
+    assert (await client.post("/tasks", json={"title": "Orphan", "boxId": "missing"})).status_code == 404
 
 
-def test_delete_thread(client):
-    created = client.post("/threads", json={"title": "Bye", "type": "todo"}).json()
-    r = client.delete(f"/threads/{created['id']}")
-    assert r.status_code == 204
-    assert client.get(f"/threads/{created['id']}").status_code == 404
+@pytest.mark.asyncio
+async def test_task_completion_and_moving_between_boxes(client):
+    inbox = (await client.get("/boxes")).json()[0]
+    today = await create_box(client, title="今日待办")
+    task = (await client.post("/tasks", json={"title": "Ship", "boxId": inbox["id"], "tags": ["work"]})).json()
+
+    completed = await client.patch(
+        f"/tasks/{task['id']}", json={"completedAt": "2026-07-17T10:00:00+00:00"}
+    )
+    moved = await client.patch(f"/tasks/{task['id']}", json={"boxId": today["id"]})
+
+    assert completed.status_code == 200
+    assert completed.json()["completedAt"] == "2026-07-17T10:00:00+00:00"
+    assert moved.status_code == 200
+    assert moved.json()["boxId"] == today["id"]
 
 
-def test_delete_missing_returns_404(client):
-    r = client.delete("/threads/ghost")
-    assert r.status_code == 404
+@pytest.mark.asyncio
+async def test_delete_box_can_delete_or_move_its_tasks(client):
+    inbox = (await client.get("/boxes")).json()[0]
+    delete_task = (await client.post("/tasks", json={"title": "Discard", "boxId": inbox["id"]})).json()
+
+    deleted = await client.request("DELETE", f"/boxes/{inbox['id']}", json={"taskDisposition": "delete"})
+    assert deleted.status_code == 204
+    assert (await client.get(f"/tasks/{delete_task['id']}")).status_code == 404
+
+    source = await create_box(client, title="Source", x=0)
+    target = await create_box(client, title="Target", x=4)
+    moving_task = (await client.post("/tasks", json={"title": "Move me", "boxId": source["id"]})).json()
+
+    moved = await client.request(
+        "DELETE",
+        f"/boxes/{source['id']}",
+        json={"taskDisposition": "move", "targetBoxId": target["id"]},
+    )
+    assert moved.status_code == 204
+    assert (await client.get(f"/tasks/{moving_task['id']}")).json()["boxId"] == target["id"]
 
 
-def test_entry_type_via_api(client):
-    r = client.post("/threads", json={"title": "Docs link", "type": "entry", "notes": "https://example.com"})
-    assert r.status_code == 201
-    assert r.json()["type"] == "entry"
+@pytest.mark.asyncio
+async def test_delete_box_requires_a_valid_target_when_moving_tasks(client):
+    inbox = (await client.get("/boxes")).json()[0]
+
+    missing_target = await client.request("DELETE", f"/boxes/{inbox['id']}", json={"taskDisposition": "move"})
+    assert missing_target.status_code == 422
+
+    same_target = await client.request(
+        "DELETE",
+        f"/boxes/{inbox['id']}",
+        json={"taskDisposition": "move", "targetBoxId": inbox["id"]},
+    )
+    assert same_target.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_missing_task_returns_404(client):
+    assert (await client.get("/tasks/missing")).status_code == 404
+    assert (await client.patch("/tasks/missing", json={"title": "Nope"})).status_code == 404
+    assert (await client.delete("/tasks/missing")).status_code == 404
 
 
 def test_connector_protocol_contract():

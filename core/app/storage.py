@@ -282,6 +282,6 @@ class JsonStorage:
             return True
 
 
-def get_storage() -> Storage:
+async def get_storage() -> Storage:
     path = os.getenv("MANBOARD_DATA_FILE", "data/threads.json")
     return JsonStorage(path)
