@@ -55,3 +55,6 @@ skills-lock.json
 # openspec CLI dependency installed at repo root by comet init
 /package.json
 /package-lock.json
+
+# Local visual brainstorming sessions
+.superpowers/
