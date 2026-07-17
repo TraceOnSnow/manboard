@@ -1,71 +1,163 @@
+from datetime import date, datetime
 from enum import Enum
-from typing import Optional
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-class ThreadType(str, Enum):
-    goal = "goal"
-    project = "project"
-    research = "research"
-    todo = "todo"
-    game = "game"
-    novel = "novel"
-    anime = "anime"
-    video = "video"
-    ai_chat = "ai-chat"
-    self_improvement = "self-improvement"
-    entry = "entry"
-    other = "other"
+class TaskPriority(str, Enum):
+    high = "high"
+    medium = "medium"
+    low = "low"
 
 
-class Horizon(str, Enum):
-    today = "today"
-    week = "week"
-    long = "long"
-    none = "none"
+class BoxLayout(BaseModel):
+    x: int = Field(ge=0, le=11)
+    y: int = Field(ge=0)
+    w: int = Field(ge=1, le=12)
+    h: int = Field(ge=2, le=24)
+
+    @model_validator(mode="after")
+    def fit_within_twelve_columns(self):
+        if self.x + self.w > 12:
+            raise ValueError("Box layout must fit within the 12-column grid")
+        return self
 
 
-class ThreadStatus(str, Enum):
-    active = "active"
-    paused = "paused"
-    parked = "parked"
-    done = "done"
+class BoxBase(BaseModel):
+    title: str = Field(min_length=1, max_length=80)
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str) -> str:
+        title = value.strip()
+        if not title:
+            raise ValueError("title cannot be blank")
+        return title
 
 
-class ThreadPriority(str, Enum):
-    now = "now"
-    next = "next"
-    later = "later"
+class BoxCreate(BoxBase):
+    layout: BoxLayout
 
 
-class ThreadBase(BaseModel):
-    title: str = Field(..., min_length=1)
-    type: ThreadType
-    status: ThreadStatus = ThreadStatus.active
-    priority: ThreadPriority = ThreadPriority.next
-    horizon: Horizon = Horizon.none
-    area: Optional[str] = None
-    nextAction: Optional[str] = None
-    notes: Optional[str] = None
+class BoxUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=80)
+    layout: BoxLayout | None = None
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        title = value.strip()
+        if not title:
+            raise ValueError("title cannot be blank")
+        return title
 
 
-class ThreadCreate(ThreadBase):
+class Box(BoxBase):
+    id: str
+    layout: BoxLayout
+    createdAt: str
+    updatedAt: str
+
+
+def _normalize_tags(value: list[str]) -> list[str]:
+    return list(dict.fromkeys(tag.strip() for tag in value if tag.strip()))
+
+
+def _validate_due_date(value: str | None) -> str | None:
+    if value is not None:
+        date.fromisoformat(value)
+    return value
+
+
+def _validate_completed_at(value: str | None) -> str | None:
+    if value is not None:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return value
+
+
+class TaskBase(BaseModel):
+    title: str = Field(min_length=1, max_length=240)
+    boxId: str = Field(min_length=1)
+    tags: list[str] = Field(default_factory=list)
+    priority: TaskPriority | None = None
+    dueDate: str | None = None
+    details: str | None = None
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str) -> str:
+        title = value.strip()
+        if not title:
+            raise ValueError("title cannot be blank")
+        return title
+
+    @field_validator("tags")
+    @classmethod
+    def normalize_tags(cls, value: list[str]) -> list[str]:
+        return _normalize_tags(value)
+
+    @field_validator("dueDate")
+    @classmethod
+    def validate_due_date(cls, value: str | None) -> str | None:
+        return _validate_due_date(value)
+
+
+class TaskCreate(TaskBase):
     pass
 
 
-class ThreadUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1)
-    type: Optional[ThreadType] = None
-    status: Optional[ThreadStatus] = None
-    priority: Optional[ThreadPriority] = None
-    horizon: Optional[Horizon] = None
-    area: Optional[str] = None
-    nextAction: Optional[str] = None
-    notes: Optional[str] = None
+class TaskUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=240)
+    boxId: str | None = Field(default=None, min_length=1)
+    tags: list[str] | None = None
+    priority: TaskPriority | None = None
+    dueDate: str | None = None
+    details: str | None = None
+    completedAt: str | None = None
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        title = value.strip()
+        if not title:
+            raise ValueError("title cannot be blank")
+        return title
+
+    @field_validator("tags")
+    @classmethod
+    def normalize_tags(cls, value: list[str] | None) -> list[str] | None:
+        return None if value is None else _normalize_tags(value)
+
+    @field_validator("dueDate")
+    @classmethod
+    def validate_due_date(cls, value: str | None) -> str | None:
+        return _validate_due_date(value)
+
+    @field_validator("completedAt")
+    @classmethod
+    def validate_completed_at(cls, value: str | None) -> str | None:
+        return _validate_completed_at(value)
 
 
-class Thread(ThreadBase):
+class Task(TaskBase):
     id: str
-    lastTouched: str
+    completedAt: str | None = None
+    position: int = Field(ge=0)
     createdAt: str
     updatedAt: str
+
+
+class BoxDelete(BaseModel):
+    taskDisposition: Literal["delete", "move"]
+    targetBoxId: str | None = None
+
+    @model_validator(mode="after")
+    def require_target_when_moving_tasks(self):
+        if self.taskDisposition == "move" and not self.targetBoxId:
+            raise ValueError("targetBoxId is required when moving tasks")
+        return self

@@ -1,34 +1,45 @@
 import pytest
 from pydantic import ValidationError
-from app.models import Thread, ThreadCreate, ThreadUpdate, Horizon, ThreadType
+
+from app.models import BoxCreate, BoxDelete, TaskCreate, TaskPriority, TaskUpdate
 
 
-def test_horizon_default_is_none():
-    t = ThreadCreate(title="test", type=ThreadType.todo)
-    assert t.horizon == Horizon.none
+def test_task_accepts_one_box_and_a_single_due_date():
+    task = TaskCreate(title="Pay bill", boxId="inbox", dueDate="2026-07-18")
+
+    assert task.boxId == "inbox"
+    assert task.dueDate == "2026-07-18"
 
 
-def test_horizon_valid_values():
-    for h in ("today", "week", "long", "none"):
-        t = ThreadCreate(title="test", type=ThreadType.todo, horizon=h)
-        assert t.horizon.value == h
-
-
-def test_horizon_invalid_value_raises():
+def test_task_rejects_non_iso_due_date():
     with pytest.raises(ValidationError):
-        ThreadCreate(title="test", type=ThreadType.todo, horizon="invalid")
+        TaskCreate(title="Bad date", boxId="inbox", dueDate="2026/07/18")
 
 
-def test_entry_type_accepted():
-    t = ThreadCreate(title="Claude docs", type=ThreadType.entry)
-    assert t.type == ThreadType.entry
+def test_task_priority_only_accepts_high_medium_low():
+    assert TaskCreate(title="P", boxId="inbox", priority="high").priority is TaskPriority.high
+
+    with pytest.raises(ValidationError):
+        TaskCreate(title="P", boxId="inbox", priority="now")
 
 
-def test_thread_update_horizon_optional():
-    u = ThreadUpdate(horizon="week")
-    assert u.horizon == Horizon.week
+def test_tags_are_trimmed_and_deduplicated():
+    task = TaskCreate(title="Tagged", boxId="inbox", tags=[" work ", "", "work", "生活"])
+
+    assert task.tags == ["work", "生活"]
 
 
-def test_thread_update_all_none():
-    u = ThreadUpdate()
-    assert u.horizon is None
+def test_box_layout_cannot_leave_the_twelve_column_grid():
+    with pytest.raises(ValidationError):
+        BoxCreate(title="Too wide", layout={"x": 0, "y": 0, "w": 13, "h": 4})
+
+
+def test_move_disposition_requires_a_target_box():
+    with pytest.raises(ValidationError):
+        BoxDelete(taskDisposition="move")
+
+
+def test_task_update_preserves_explicit_completion_clear():
+    update = TaskUpdate(completedAt=None)
+
+    assert update.model_dump(exclude_unset=True) == {"completedAt": None}
