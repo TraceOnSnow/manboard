@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Manboard: 启动 API",
+      "type": "process",
+      "command": "${workspaceFolder}/core/.venv/bin/python",
+      "args": ["-m", "uvicorn", "app.main:app", "--reload", "--port", "8000"],
+      "options": {
+        "cwd": "${workspaceFolder}/core",
+        "env": {
+          "MANBOARD_DATA_FILE": "${workspaceFolder}/data/threads.json"
+        }
+      },
+      "presentation": {
+        "group": "manboard",
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Manboard: 启动 Dashboard",
+      "type": "process",
+      "command": "npm",
+      "args": ["run", "dev", "--", "--host", "localhost"],
+      "options": {
+        "cwd": "${workspaceFolder}/dashboard"
+      },
+      "presentation": {
+        "group": "manboard",
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    }
+  ]
+}

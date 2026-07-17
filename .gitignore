@@ -21,7 +21,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # Editor / OS
-.vscode/
+# Share the workspace launch instructions, but keep other local VS Code files private.
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea/
 .DS_Store
 Thumbs.db

@@ -32,6 +32,12 @@ npm run dev
 
 Open http://localhost:5173.
 
+### VS Code 一键启动
+
+完成一次依赖安装后，在 VS Code 的 **Run and Debug（运行和调试）** 侧栏选择 `启动 Manboard（前后端）`，按 **F5**。它会同时启动 FastAPI 与 Vite，并在前端就绪后自动打开 `http://localhost:5173`。
+
+也可以通过命令面板的 **Tasks: Run Task** 单独运行 `Manboard: 启动 API` 或 `Manboard: 启动 Dashboard`。
+
 ### Fresh clone (new machine)
 
 Assumes Python 3.10+, Node 18+, and git are installed.
