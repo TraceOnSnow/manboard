@@ -2,25 +2,41 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "启动 API",
+      "name": "启动 Manboard（前后端）",
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["app.main:app", "--reload", "--port", "8000"],
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--port",
+        "8000"
+      ],
       "cwd": "${workspaceFolder}/core",
       "python": "${workspaceFolder}/core/.venv/bin/python",
       "env": {
         "MANBOARD_DATA_FILE": "${workspaceFolder}/data/threads.json"
       },
       "console": "integratedTerminal",
-      "justMyCode": true
+      "justMyCode": true,
+      "serverReadyAction": {
+        "action": "startDebugging",
+        "pattern": "Uvicorn running on (https?://\\S+)",
+        "name": "启动 Dashboard（并打开浏览器）"
+      }
     },
     {
       "name": "启动 Dashboard（并打开浏览器）",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--host", "localhost"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--host",
+        "localhost"
+      ],
       "cwd": "${workspaceFolder}/dashboard",
       "console": "integratedTerminal",
       "serverReadyAction": {
@@ -28,13 +44,6 @@
         "pattern": "\\s+Local:\\s+(https?://\\S+)",
         "uriFormat": "%s"
       }
-    }
-  ],
-  "compounds": [
-    {
-      "name": "启动 Manboard（前后端）",
-      "configurations": ["启动 API", "启动 Dashboard（并打开浏览器）"],
-      "stopAll": true
     }
   ]
 }

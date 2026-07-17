@@ -45,17 +45,19 @@ class VSCodeLaunchConfigurationTests(unittest.TestCase):
         self.assertEqual(dashboard["serverReadyAction"]["action"], "openExternally")
         self.assertEqual(dashboard["serverReadyAction"]["uriFormat"], "%s")
 
-    def test_compound_launch_starts_both_services(self):
-        compounds = read_json("launch.json")["compounds"]
-        one_click_launch = next(
-            compound for compound in compounds if compound["name"] == "启动 Manboard（前后端）"
-        )
+    def test_backend_readiness_starts_the_dashboard_after_the_api_is_available(self):
+        configurations = read_json("launch.json")["configurations"]
+        by_name = {configuration["name"]: configuration for configuration in configurations}
 
+        one_click_launch = by_name["启动 Manboard（前后端）"]
+        self.assertEqual(one_click_launch["type"], "debugpy")
+        self.assertEqual(one_click_launch["module"], "uvicorn")
+        self.assertEqual(one_click_launch["serverReadyAction"]["action"], "startDebugging")
         self.assertEqual(
-            one_click_launch["configurations"],
-            ["启动 API", "启动 Dashboard（并打开浏览器）"],
+            one_click_launch["serverReadyAction"]["name"],
+            "启动 Dashboard（并打开浏览器）",
         )
-        self.assertTrue(one_click_launch["stopAll"])
+        self.assertIn("Uvicorn running on", one_click_launch["serverReadyAction"]["pattern"])
 
 
 if __name__ == "__main__":

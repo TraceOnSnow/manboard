@@ -32,12 +32,13 @@ This configuration does not install dependencies or create virtual environments 
 - Runs `npm run dev -- --host localhost` on port 5173.
 - Marks the task ready when Vite prints its localhost URL.
 
-### Compound launch
+### Sequenced F5 launch
 
 - F5 configuration name: `启动 Manboard（前后端）`.
-- Starts the API and dashboard configurations concurrently.
-- Opens `http://localhost:5173` once the dashboard configuration reaches its readiness pattern.
-- Individual backend and frontend launch configurations remain available for isolated debugging.
+- Starts FastAPI first and waits for Uvicorn to report that it is listening on port 8000.
+- The API readiness action then starts `启动 Dashboard（并打开浏览器）`.
+- The dashboard readiness action opens `http://localhost:5173` only after Vite is listening on port 5173.
+- This ordering prevents the dashboard's initial `/threads` request from racing the API startup.
 
 ## First-Time Setup
 
