@@ -50,7 +50,7 @@ class VSCodeLaunchConfigurationTests(unittest.TestCase):
         by_name = {configuration["name"]: configuration for configuration in configurations}
 
         one_click_launch = by_name["启动 Manboard（前后端）"]
-        self.assertEqual(one_click_launch["type"], "debugpy")
+        self.assertEqual(one_click_launch["type"], "python")
         self.assertEqual(one_click_launch["module"], "uvicorn")
         self.assertEqual(one_click_launch["serverReadyAction"]["action"], "startDebugging")
         self.assertEqual(

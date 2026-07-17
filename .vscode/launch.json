@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "启动 Manboard（前后端）",
-      "type": "debugpy",
+      "type": "python",
       "request": "launch",
       "module": "uvicorn",
       "args": [
