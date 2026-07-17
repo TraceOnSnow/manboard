@@ -1,185 +1,147 @@
-# manboard
+# Manboard
 
-Personal AI OS frontend shell — a unified hub for goals, projects, todos, research, media, and workflow shortcuts.
+一个本地优先的个人任务看板：用可拖动、可缩放的 **Box** 组织任务；任务完成后自动沉到当前 Box 的底部。
 
-**The framework is open source. Your data is not.** Everything in `data/` is gitignored by default.
+> 你的数据默认保留在本机 `data/`，不会被提交到仓库。`data/sample/` 只放可公开的示例数据。
 
-## Structure
+## 现在有什么
 
-```
-manboard/
-├── core/          # FastAPI backend — data model, storage, connectors
-├── dashboard/     # Vite + React frontend
-└── data/          # Private data (gitignored). data/sample/ is public.
-```
+- 默认自动创建一个 **Inbox** Box；它和其他 Box 一样可重命名、拖动、缩放或删除。
+- 自由新增任意 Box，例如「今日待办」「项目」「长期事项」。
+- 每个 Box 右上角的 `＋` 可快速创建任务。
+- 勾选任务即完成；已完成任务会变灰、加删除线，并自动排在同 Box 的未完成任务之后。
+- 点击任务标题可就地重命名；点击右侧铅笔在右侧抽屉编辑详情。
+- 任务只能属于一个 Box，支持多个标签、一个截止日期、高/中/低优先级、详情备注。
+- 删除 Box 时可以删除其中所有任务，或把任务迁移至另一个 Box。
 
-## Quick start
+## 一键启动（VS Code）
 
-### On a machine that already has the project set up
+首次运行前，在两个终端各执行一次：
 
-**Backend**
-```bash
-cd core
-source .venv/bin/activate          # if you use a venv
-MANBOARD_DATA_FILE=../data/threads.json uvicorn app.main:app --reload
-```
-
-**Frontend** (new terminal)
-```bash
-cd dashboard
-npm run dev
-```
-
-Open http://localhost:5173.
-
-### VS Code 一键启动
-
-完成一次依赖安装后，在 VS Code 的 **Run and Debug（运行和调试）** 侧栏选择 `启动 Manboard（前后端）`，按 **F5**。它会同时启动 FastAPI 与 Vite，并在前端就绪后自动打开 `http://localhost:5173`。
-
-也可以通过命令面板的 **Tasks: Run Task** 单独运行 `Manboard: 启动 API` 或 `Manboard: 启动 Dashboard`。
-
-### Fresh clone (new machine)
-
-Assumes Python 3.10+, Node 18+, and git are installed.
-
-```bash
-git clone https://github.com/TraceOnSnow/manboard.git
-cd manboard
-```
-
-**Backend**
 ```bash
 cd core
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt
 
-# data/threads.json is gitignored (private). Seed it from the sample:
-cd ..
-cp data/sample/threads.json data/threads.json
-cd core
-
-MANBOARD_DATA_FILE=../data/threads.json uvicorn app.main:app --reload
+cd ../dashboard
+npm install
 ```
 
-**Frontend** (new terminal)
+然后在 VS Code：
+
+1. 打开 **Run and Debug**（侧栏播放图标）。
+2. 选择 **启动 Manboard（前后端）**。
+3. 按 **F5**。
+
+它会先启动 API，再启动 Dashboard，并自动打开浏览器。
+
+- Dashboard：`http://localhost:5173`
+- API：`http://localhost:8000`
+
+> 若当前 VS Code 环境提示 `debugpy is not supported`，不要使用调试器：在 VS Code 的终端分别运行下面两条命令即可。项目功能不依赖 debugpy。
+
+## 手动启动
+
+**终端 1：API**
+
+```bash
+cd core
+MANBOARD_DATA_FILE=../data/threads.json .venv/bin/python -m uvicorn app.main:app --reload --port 8000
+```
+
+**终端 2：前端**
+
 ```bash
 cd dashboard
-npm install
-npm run dev
+npm run dev -- --host localhost
 ```
 
-Open http://localhost:5173 (use `localhost`, not `127.0.0.1`).
+浏览器打开 `http://localhost:5173`。
 
-### Common pitfalls
+## 数据与旧数据升级
 
-- **`pip: command not found` / can't import uvicorn** — you forgot to activate the venv. Run `source .venv/bin/activate` in every new shell before starting the backend.
-- **Python too old** — needs 3.10+. Check with `python --version`; install a newer one with `mise`/`pyenv` if needed.
-- **Port in use (8000 / 5173)** — keep the defaults; changing the backend port breaks the frontend, which hardcodes `http://localhost:8000` in `dashboard/src/api/threads.ts`.
-- **CORS error** — access the app at `http://localhost:5173`, not `127.0.0.1`.
-- **Empty data / "还没有 Thread"** — you skipped the seed step; run `cp data/sample/threads.json data/threads.json`.
+默认数据文件仍为 `data/threads.json`，但其内部格式已经升级为 Box 看板格式（`version: 2`）。首次启动时：
 
-## Configuration
+- 没有数据文件：自动创建含一个 `Inbox` 的新看板。
+- 检测到旧 Thread 格式：自动将全部旧记录迁移进 `Inbox`。
+- 迁移前会在同目录创建一次备份：`data/threads.json.bak`。
 
-| Env var | Default | Description |
-|---------|---------|-------------|
-| `MANBOARD_DATA_FILE` | `data/threads.json` | Path to the JSON data file |
+旧字段的迁移规则：
 
-## Data model
+| 旧 Thread 字段 | 新任务字段 |
+| --- | --- |
+| `type` + `area` | `tags` |
+| `nextAction` + `notes` | `details` |
+| `done` | `completedAt` |
+| `now` / `next` / `later` | 高 / 中 / 低优先级 |
 
-Every item is a **Thread** with these key fields:
-
-- `type` — goal / project / research / todo / game / novel / anime / video / ai-chat / self-improvement / entry / other
-- `horizon` — `today` / `week` / `long` / `none` (default)
-- `priority` — now / next / later
-- `status` — active / paused / parked / done
-
-**Horizon routing** (view-exclusive):
-- `horizon=today|week|long` → item appears only in the matching time section
-- `horizon=none` → item appears in its type-based content section
-
-## Dashboard workflows
-
-- **快速记录** — 首页输入一句话即可创建 Inbox 条目（`type=other`, `horizon=none`）；之后在详情抽屉中把它整理为项目、待办、研究或媒体记录。
-- **今日待办** — `type=todo` 且 `horizon=today` 的条目显示为低摩擦复选框，直接在进行中与完成间切换。
-- **长期内容** — 项目、研究和媒体按最近更新时间排序；完成项默认折叠，避免干扰日常浏览。
-- **分区新增** — 每个板块的“新增”会预填对应的 type/horizon；桌面端侧栏用于跳转板块，条目编辑在右侧详情抽屉中进行。
-
-原有的目标、项目、待办、AI 对话、研究、媒体和工作流入口仍由 `type` + `horizon` 推导，后端 API 和存储格式无需迁移。
-
-## Backend tests
+如需恢复旧数据，先停止 API，再用备份替换当前文件：
 
 ```bash
+cp data/threads.json.bak data/threads.json
+```
+
+可通过环境变量改用其他数据文件：
+
+```bash
+MANBOARD_DATA_FILE=/absolute/path/to/board.json
+```
+
+## REST API
+
+### Box
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/boxes` | 列出 Box |
+| `POST` | `/boxes` | 新建 Box |
+| `PATCH` | `/boxes/{id}` | 修改名称或网格布局 |
+| `DELETE` | `/boxes/{id}` | 删除 Box；请求体指定删除任务或迁移任务 |
+
+删除 Box 请求体示例：
+
+```json
+{ "taskDisposition": "delete" }
+```
+
+```json
+{ "taskDisposition": "move", "targetBoxId": "other-box-id" }
+```
+
+### Task
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/tasks` | 列出任务 |
+| `POST` | `/tasks` | 新建任务 |
+| `GET` | `/tasks/{id}` | 获取任务 |
+| `PATCH` | `/tasks/{id}` | 修改任务、移动 Box 或切换完成状态 |
+| `DELETE` | `/tasks/{id}` | 删除任务 |
+
+任务字段：`title`、`boxId`、`tags`、`priority`（`high` / `medium` / `low`）、`dueDate`（`YYYY-MM-DD`）、`details`、`completedAt`。
+
+## 测试与构建
+
+```bash
+# 后端
 cd core
-pytest tests/ -v
+.venv/bin/python -m pytest tests/test_models.py tests/test_storage.py tests/test_api.py -q
+
+# 前端
+cd ../dashboard
+npm test
+npm run build
+
+# VS Code 启动配置
+cd ..
+python3 core/tests/test_vscode_launch_config.py -v
 ```
 
-## Adding a new storage backend
+## 项目结构
 
-Implement the `Storage` protocol in `core/app/storage.py` and point `get_storage()` at it:
-
-```python
-class MyStorage:
-    def list(self) -> List[Thread]: ...
-    def get(self, item_id: str) -> Thread: ...
-    def create(self, payload: ThreadCreate) -> Thread: ...
-    def update(self, item_id: str, payload: ThreadUpdate) -> Thread: ...
-    def delete(self, item_id: str) -> bool: ...
+```text
+core/       FastAPI API、数据模型和 JSON 存储
+ dashboard/ React + Vite 看板界面
+ data/      本地私有数据（已 gitignore）
+ .vscode/   F5 启动配置
 ```
-
-## Planned connectors
-
-The `Connector` protocol (`core/app/connectors.py`) defines the interface for future integrations: Obsidian, GitHub Issues, Calendar, RSS, AI archives. No connector is implemented in the current version.
-
-## Continuing development
-
-This project uses [Comet](https://docs.comet.rpamis.com/zh/introduction) (OpenSpec for WHAT + Superpowers for HOW) to drive changes through a recoverable, file-based workflow: `open → design → build → verify → archive`. Each change lives under `openspec/changes/<name>/`; finished ones are archived to `openspec/changes/archive/` and their specs merged into `openspec/specs/`.
-
-### First-time setup (once per machine)
-
-```bash
-npm install -g @rpamis/comet
-cd manboard
-comet init        # installs Comet skills/hooks/rules for this project
-comet doctor      # confirm the environment is healthy (all green)
-```
-
-### Starting a change
-
-Work inside an AI agent that has Comet loaded (e.g. Claude Code). Describe what you want — Comet routes it:
-
-- **New feature / refactor / anything with design weight** → `/comet <description>` starts a `full` change (open → design → build → verify → archive).
-- **Small fix** → `/comet-hotfix <description>` (skips design).
-- **Light-to-medium edit driven by a single OpenSpec change** → `/comet-tweak <description>`.
-
-### Resuming after a break
-
-State is stored in `.comet.yaml`, not in the conversation — so context survives across sessions, machines, and model switches. To pick up where you left off:
-
-```bash
-comet status      # see the active change and current phase
-```
-
-Then in the agent:
-
-```
-/comet 继续
-```
-
-Comet re-reads the state and resumes from the exact phase/step. No need to re-explain the history.
-
-### Where things live
-
-| Path | Purpose |
-|------|---------|
-| `openspec/changes/<name>/` | Active change artifacts (proposal, design, tasks, delta specs) |
-| `openspec/changes/archive/` | Completed changes |
-| `openspec/specs/` | Merged main specs (the accumulated source of truth) |
-| `docs/superpowers/specs/` | Technical design docs |
-| `docs/superpowers/plans/` | Implementation plans |
-| `docs/superpowers/reports/` | Verification reports |
-
-### Notes
-
-- **Framework is open source, data is not.** `data/*.json` is gitignored; only `data/sample/` ships in the repo.
-- The Comet phase-guard enforces workflow discipline automatically — if you try to edit source code while a change is mid-flight, it blocks and redirects you to the right phase. You don't have to police the process yourself.
