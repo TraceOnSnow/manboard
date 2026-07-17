@@ -1,3 +1,6 @@
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -48,3 +51,6 @@
     animation-iteration-count: 1 !important;
   }
 }
+.box-grid .react-grid-item > .react-resizable-handle { right: 7px; bottom: 7px; width: 16px; height: 16px; opacity: .55; }
+.box-grid .react-grid-item > .react-resizable-handle::after { border-color: #a1a1aa; }
+.box-grid .react-grid-item.react-grid-placeholder { background: #dbeafe; border-radius: 16px; }

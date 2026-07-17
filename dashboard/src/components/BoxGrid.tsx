@@ -1,0 +1,7 @@
+import { Responsive, type Layout, useContainerWidth } from "react-grid-layout";
+import type { RefObject } from "react";
+import type { Box, Task } from "../types/board";
+import { BoxCard } from "./BoxCard";
+
+type Props={boxes:Box[];tasks:Task[];onLayoutCommit:(layouts:Layout)=>void;onQuickCreate:(boxId:string,title:string)=>Promise<void>;onRenameBox:(box:Box,title:string)=>Promise<void>;onDeleteBox:(box:Box)=>void;onToggleComplete:(task:Task)=>void;onRenameTask:(task:Task,title:string)=>Promise<void>;onEditTask:(task:Task)=>void};
+export function BoxGrid(props:Props){const {width,containerRef}=useContainerWidth({initialWidth:1200});const layout=props.boxes.map(box=>({i:box.id,...box.layout}));const card=(box:Box)=><BoxCard box={box} tasks={props.tasks.filter(task=>task.boxId===box.id)} onQuickCreate={props.onQuickCreate} onRenameBox={props.onRenameBox} onDeleteBox={props.onDeleteBox} onToggleComplete={props.onToggleComplete} onRenameTask={props.onRenameTask} onEditTask={props.onEditTask}/>;return <><div ref={containerRef as unknown as RefObject<HTMLDivElement>} className="hidden md:block"><Responsive className="box-grid" width={width} cols={{lg:12,md:12}} breakpoints={{lg:1024,md:768}} layouts={{lg:layout,md:layout}} rowHeight={44} margin={[16,16]} dragConfig={{handle:"[data-box-drag-handle]"}} onLayoutChange={(next:Layout)=>props.onLayoutCommit(next)}>{props.boxes.map(box=><div key={box.id}>{card(box)}</div>)}</Responsive></div><div className="space-y-4 md:hidden">{props.boxes.map(box=><div key={box.id}>{card(box)}</div>)}</div></>}
