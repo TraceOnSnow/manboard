@@ -3,47 +3,21 @@
   "configurations": [
     {
       "name": "启动 Manboard（前后端）",
-      "type": "python",
+      "type": "node",
       "request": "launch",
-      "module": "uvicorn",
-      "args": [
-        "app.main:app",
-        "--reload",
-        "--port",
-        "8000"
-      ],
-      "cwd": "${workspaceFolder}/core",
-      "python": "${workspaceFolder}/core/.venv/bin/python",
-      "env": {
-        "MANBOARD_DATA_FILE": "${workspaceFolder}/data/threads.json"
-      },
+      "program": "${workspaceFolder}/scripts/start-manboard.mjs",
+      "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "justMyCode": true,
-      "serverReadyAction": {
-        "action": "startDebugging",
-        "pattern": "Uvicorn running on (https?://\\S+)",
-        "name": "启动 Dashboard（并打开浏览器）"
-      }
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "name": "启动 Dashboard（并打开浏览器）",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev",
-        "--",
-        "--host",
-        "localhost"
-      ],
-      "cwd": "${workspaceFolder}/dashboard",
+      "program": "${workspaceFolder}/scripts/start-dashboard.mjs",
+      "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\s+Local:\\s+(https?://\\S+)",
-        "uriFormat": "%s"
-      }
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

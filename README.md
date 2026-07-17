@@ -33,12 +33,10 @@ npm install
 2. 选择 **启动 Manboard（前后端）**。
 3. 按 **F5**。
 
-它会先启动 API，再启动 Dashboard，并自动打开浏览器。
+它会先启动 API、等待 API 健康检查通过，再启动 Dashboard 并自动打开浏览器。这个启动器使用 Node 进程编排，不再依赖 Python 的 `debugpy`，因此不会再触发 `debugpy is not supported`。
 
 - Dashboard：`http://localhost:5173`
 - API：`http://localhost:8000`
-
-> 若当前 VS Code 环境提示 `debugpy is not supported`，不要使用调试器：在 VS Code 的终端分别运行下面两条命令即可。项目功能不依赖 debugpy。
 
 ## 手动启动
 
@@ -141,7 +139,8 @@ python3 core/tests/test_vscode_launch_config.py -v
 
 ```text
 core/       FastAPI API、数据模型和 JSON 存储
- dashboard/ React + Vite 看板界面
- data/      本地私有数据（已 gitignore）
- .vscode/   F5 启动配置
+dashboard/ React + Vite 看板界面
+scripts/    无 debugpy 的 VS Code 启动脚本
+data/       本地私有数据（已 gitignore）
+.vscode/    F5 启动配置
 ```
