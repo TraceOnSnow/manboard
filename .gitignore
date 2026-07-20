@@ -40,19 +40,19 @@ Thumbs.db
 
 # Private data (framework is open source, data is not)
 data/*.json
+data/*.bak
 !data/sample/
 data/*.db
 data/*.sqlite
 
-# Comet/Superpowers/CodeGraph platform tooling (installed via comet init, not project code)
-.claude/commands/
-.claude/skills/
+# Local assistant-tool state (kept outside version control)
+.claude/
 .agents/
 .codex/
 .codegraph/
 skills-lock.json
 
-# openspec CLI dependency installed at repo root by comet init
+# Legacy local automation dependencies
 /package.json
 /package-lock.json
 

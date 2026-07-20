@@ -118,22 +118,15 @@ MANBOARD_DATA_FILE=/absolute/path/to/board.json
 
 任务字段：`title`、`boxId`、`tags`、`priority`（`high` / `medium` / `low`）、`dueDate`（`YYYY-MM-DD`）、`details`、`completedAt`。
 
-## 测试与构建
+## 验证
+
+完成改动后，在仓库根目录运行：
 
 ```bash
-# 后端
-cd core
-.venv/bin/python -m pytest tests/test_models.py tests/test_storage.py tests/test_api.py -q
-
-# 前端
-cd ../dashboard
-npm test
-npm run build
-
-# VS Code 启动配置
-cd ..
-python3 core/tests/test_vscode_launch_config.py -v
+./scripts/verify.sh
 ```
+
+它会执行后端测试、前端测试、生产构建、启动脚本语法检查和 Git diff 检查。
 
 ## 项目结构
 
