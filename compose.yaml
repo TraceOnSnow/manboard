@@ -1,0 +1,20 @@
+name: manboard
+
+services:
+  api:
+    build:
+      context: ./core
+    restart: unless-stopped
+    environment:
+      MANBOARD_DATA_FILE: /data/board.json
+    volumes:
+      - ./data:/data
+    ports:
+      - "127.0.0.1:18000:8000"
+
+  web:
+    build:
+      context: ./dashboard
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18080:80"

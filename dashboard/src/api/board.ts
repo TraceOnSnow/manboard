@@ -1,6 +1,6 @@
 import type { Box, BoxCreate, BoxDelete, BoxUpdate, Task, TaskCreate, TaskUpdate } from "../types/board";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
