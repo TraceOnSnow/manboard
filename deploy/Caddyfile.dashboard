@@ -1,0 +1,16 @@
+# Append this block to /etc/caddy/Caddyfile after replacing the placeholders.
+# Generate a bcrypt hash with: caddy hash-password --plaintext 'your-password'
+
+dashboard.traceonsnow.com {
+    basicauth {
+        YOUR_USERNAME YOUR_BCRYPT_PASSWORD_HASH
+    }
+
+    handle_path /api/* {
+        reverse_proxy 127.0.0.1:18000
+    }
+
+    handle {
+        reverse_proxy 127.0.0.1:18080
+    }
+}

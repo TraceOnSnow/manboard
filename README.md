@@ -137,3 +137,24 @@ scripts/    无 debugpy 的 VS Code 启动脚本
 data/       本地私有数据（已 gitignore）
 .vscode/    F5 启动配置
 ```
+
+## 本机生产部署
+
+此项目可部署在当前机器的 Docker 与 Caddy 上。应用容器只监听 `127.0.0.1`，所有公网访问均由 Caddy 的 HTTPS 与 Basic Auth 保护。
+
+1. 在 Spaceship DNS 中新增记录：`A`、主机名 `dashboard`、值 `43.155.230.220`。
+2. 在仓库根目录运行 `docker compose up --build -d`。
+3. 用 Caddy 2.6 的 `basicauth` 指令将 [`deploy/Caddyfile.dashboard`](deploy/Caddyfile.dashboard) 中的站点块追加到 `/etc/caddy/Caddyfile`。为用户名生成 bcrypt 哈希：
+
+   ```bash
+   caddy hash-password --plaintext 'choose-a-strong-password'
+   ```
+
+4. 验证并热加载 Caddy：
+
+   ```bash
+   caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+   caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+   ```
+
+Caddy 在 DNS 生效后会自动申请 TLS 证书。生产 JSON 数据存储在本机私有目录 `data/board.json`，不会提交到 Git。
